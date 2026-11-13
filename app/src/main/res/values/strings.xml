@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">TaskFlow</string>
+
+    <!-- Pantalla 1: Inicio -->
+    <string name="subtitulo_inicio">Organiza tus pendientes diarios de forma rápida y sencilla</string>
+    <string name="desc_logo_taskflow">Logo de TaskFlow</string>
+    <string name="btn_ver_mis_tareas">Ver mis tareas &gt;</string>
+
+    <!-- Pantalla 2: Lista de tareas -->
+    <string name="titulo_mis_tareas">Mis tareas</string>
+    <string name="desc_configuracion">Configuración</string>
+    <string name="desc_agregar_tarea">Agregar tarea</string>
+    <string name="filtro_todas">Todas</string>
+    <string name="filtro_pendientes">Pendientes</string>
+    <string name="filtro_terminadas">Terminadas</string>
+    <string name="sin_tareas">No hay tareas en esta sección</string>
+    <string name="entrega_formato">Entrega: %1$s</string>
+</resources>
