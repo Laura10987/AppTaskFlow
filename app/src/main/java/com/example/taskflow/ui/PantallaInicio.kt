@@ -36,7 +36,7 @@ fun PantallaInicio(
             Surface(
                 modifier = Modifier.size(120.dp),
                 shape = RoundedCornerShape(28.dp),
-                color = MaterialTheme.colorScheme.surface,
+                color = MaterialTheme.colorScheme.primary,
                 shadowElevation = 8.dp
             ) {
                 Box(
@@ -83,14 +83,25 @@ fun PantallaInicio(
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                     contentColor = MaterialTheme.colorScheme.primary
+
+
                 )
+
             ) {
                 Text(
                     text = stringResource(id = R.string.btn_ver_mis_tareas),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold
                 )
+
             }
+            Spacer(modifier = Modifier.height(30.dp))
+            Text(
+                text = stringResource(id = R.string.subtitulo_abajo),
+                fontSize = 15.sp,
+                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f),
+                textAlign = TextAlign.Center
+            )
         }
     }
 }

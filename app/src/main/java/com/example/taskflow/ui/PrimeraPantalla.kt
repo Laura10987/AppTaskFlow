@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -20,11 +21,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.taskflow.R
-import com.example.taskflow.ui.theme.TaskFlowTheme
 
 // Modelo de datos para representar cada tarea en TaskFlow
 data class Tarea(
@@ -39,39 +40,60 @@ data class Tarea(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PrimeraPantalla(
+    viewModel: ProductoViewModel = hiltViewModel(),
     onAgregarTareaClick: () -> Unit = {},
     onConfiguracionClick: () -> Unit = {},
     onTareaClick: (Tarea) -> Unit = {}
 ) {
-    // Lista de tareas de ejemplo para visualizar y probar la interfaz
-    val listaTareas = remember {
-        mutableStateListOf(
-            Tarea(
-                id = 1,
-                nombre = "Entregar prototipo de TaskFlow",
-                notas = "Subir reporte digital y código en Android Studio",
-                prioridad = "Alta",
-                fecha = "15 Nov 2026",
-                completada = false
-            ),
-            Tarea(
-                id = 2,
-                nombre = "Estudiar Jetpack Compose",
-                notas = "Repasar estados, LazyColumn y navegación",
-                prioridad = "Media",
-                fecha = "17 Nov 2026",
-                completada = false
-            ),
-            Tarea(
-                id = 3,
-                nombre = "Comprar cuaderno de notas",
-                notas = "Para apuntes de Desarrollo de Aplicaciones Móviles",
-                prioridad = "Baja",
-                fecha = "12 Nov 2026",
-                completada = true
-            )
+    // 1. Leemos los datos reales desde Room en tiempo real
+    val productosDb by viewModel.producto.collectAsStateWithLifecycle()
+
+    // 2. Estados de completadas, eliminadas, detalle y configuración
+    var idsCompletadas by remember { mutableStateOf(setOf<Int>()) }
+    var idsEliminadas by remember { mutableStateOf(setOf<Int>()) }
+    var tareaSeleccionada by remember { mutableStateOf<Tarea?>(null) }
+    var mostrarConfiguracion by remember { mutableStateOf(false) }
+
+    val modoOscuro = EstadoTareasUi.modoOscuro
+    val sonidoAlAvisar = EstadoTareasUi.sonidoAlAvisar
+
+    // Si el usuario tocó el ícono de configuración, mostramos ConfiguracionPantalla
+    if (mostrarConfiguracion) {
+        ConfiguracionPantalla(
+            modoOscuro = modoOscuro,
+            onModoOscuroChange = { EstadoTareasUi.modoOscuro = it },
+            sonidoAlAvisar = sonidoAlAvisar,
+            onSonidoAlAvisarChange = { EstadoTareasUi.sonidoAlAvisar = it },
+            onBorrarTerminadas = {
+                idsEliminadas = idsEliminadas + idsCompletadas
+                idsCompletadas.forEach { idCompletado ->
+                    EstadoTareasUi.porId.remove(idCompletado)
+                }
+                idsCompletadas = emptySet()
+            },
+            onBackClick = { mostrarConfiguracion = false }
         )
+        return
     }
+
+    // 3. Convertimos cada Producto de la BD a tu modelo Tarea usando EstadoTareasUi
+    val listaTareas = productosDb
+        .filter { it.id !in idsEliminadas }
+        .map { prod ->
+            val meta = EstadoTareasUi.obtener(prod.id, prod.nombre)
+            if (prod.id !in EstadoTareasUi.porId && prod.nombre.trim() in EstadoTareasUi.porNombre) {
+                EstadoTareasUi.porId[prod.id] = meta
+            }
+
+            Tarea(
+                id = prod.id,
+                nombre = prod.nombre,
+                notas = prod.descripcion,
+                prioridad = meta.prioridad,
+                fecha = meta.fecha,
+                completada = prod.id in idsCompletadas
+            )
+        }
 
     // Pestañas obtenidas desde strings.xml
     val filtros = listOf(
@@ -88,6 +110,107 @@ fun PrimeraPantalla(
         else -> listaTareas
     }
 
+    // Diálogo para ver o eliminar la tarea seleccionada
+    tareaSeleccionada?.let { tarea ->
+        val colorPrioridad = when (tarea.prioridad) {
+            "Alta" -> Color(0xFFE53935)
+            "Media" -> Color(0xFFFB8C00)
+            else -> Color(0xFF43A047)
+        }
+
+        AlertDialog(
+            onDismissRequest = { tareaSeleccionada = null },
+            containerColor = MaterialTheme.colorScheme.surface,
+            titleContentColor = MaterialTheme.colorScheme.onSurface,
+            textContentColor = MaterialTheme.colorScheme.onSurface,
+            title = {
+                Text(
+                    text = tarea.nombre,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp
+                )
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(10.dp)
+                                .clip(CircleShape)
+                                .background(colorPrioridad)
+                        )
+                        Text(
+                            text = "Prioridad: ${tarea.prioridad}",
+                            fontWeight = FontWeight.Medium,
+                            color = colorPrioridad,
+                            fontSize = 14.sp
+                        )
+                    }
+
+                    Text(
+                        text = stringResource(id = R.string.entrega_formato, tarea.fecha),
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    Text(
+                        text = if (tarea.completada) "Estado: Terminada" else "Estado: Pendiente",
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+                    Text(
+                        text = "Notas",
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = if (tarea.notas.isNotBlank()) tarea.notas else "Sin notas adicionales.",
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        idsEliminadas = idsEliminadas + tarea.id
+                        idsCompletadas = idsCompletadas - tarea.id
+                        EstadoTareasUi.porId.remove(tarea.id)
+                        EstadoTareasUi.porNombre.remove(tarea.nombre.trim())
+
+                        // Si tienes función para borrar de Room en ProductoViewModel, llámala aquí:
+                        // productosDb.find { it.id == tarea.id }?.let { viewModel.eliminarProducto(it) }
+
+                        tareaSeleccionada = null
+                    },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Eliminar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { tareaSeleccionada = null }) {
+                    Text("Cerrar", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        )
+    }
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
@@ -102,7 +225,12 @@ fun PrimeraPantalla(
                         )
                     },
                     actions = {
-                        IconButton(onClick = onConfiguracionClick) {
+                        IconButton(
+                            onClick = {
+                                mostrarConfiguracion = true
+                                onConfiguracionClick()
+                            }
+                        ) {
                             Icon(
                                 imageVector = Icons.Default.Settings,
                                 contentDescription = stringResource(id = R.string.desc_configuracion),
@@ -142,9 +270,10 @@ fun PrimeraPantalla(
             }
         },
         floatingActionButton = {
-            // Botón flotante con color secondary (amarillo mostaza) de MaterialTheme
             FloatingActionButton(
-                onClick = onAgregarTareaClick,
+                onClick = {
+                    onAgregarTareaClick() // Solo navega a la pantalla de formulario
+                },
                 shape = CircleShape,
                 containerColor = MaterialTheme.colorScheme.secondary,
                 contentColor = MaterialTheme.colorScheme.onSecondary
@@ -181,13 +310,17 @@ fun PrimeraPantalla(
                 items(tareasFiltradas, key = { it.id }) { tarea ->
                     TarjetaTarea(
                         tarea = tarea,
-                        onCheckedChange = { marcada ->
-                            val index = listaTareas.indexOfFirst { it.id == tarea.id }
-                            if (index != -1) {
-                                listaTareas[index] = tarea.copy(completada = marcada)
+                        onCheckedChange = { estaMarcada ->
+                            idsCompletadas = if (estaMarcada) {
+                                idsCompletadas + tarea.id
+                            } else {
+                                idsCompletadas - tarea.id
                             }
                         },
-                        onClick = { onTareaClick(tarea) }
+                        onClick = {
+                            tareaSeleccionada = tarea
+                            onTareaClick(tarea)
+                        }
                     )
                 }
             }
@@ -264,7 +397,7 @@ fun TarjetaTarea(
                 Text(
                     text = stringResource(id = R.string.entrega_formato, tarea.fecha),
                     fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
                 )
             }
 
@@ -274,7 +407,7 @@ fun TarjetaTarea(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
-                    .background(colorPrioridad.copy(alpha = 0.12f))
+                    .background(colorPrioridad.copy(alpha = 0.14f))
                     .padding(horizontal = 8.dp, vertical = 4.dp)
             ) {
                 Box(
@@ -294,13 +427,3 @@ fun TarjetaTarea(
         }
     }
 }
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun PrimeraPantallaPreview() {
-    TaskFlowTheme {
-        PrimeraPantalla()
-    }
-}
-
-

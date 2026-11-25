@@ -2,7 +2,7 @@
     <string name="app_name">TaskFlow</string>
 
     <!-- Pantalla 1: Inicio -->
-    <string name="subtitulo_inicio">Organiza tus pendientes diarios de forma rápida y sencilla</string>
+    <string name="subtitulo_inicio">Organiza tu día paso a paso</string>
     <string name="desc_logo_taskflow">Logo de TaskFlow</string>
     <string name="btn_ver_mis_tareas">Ver mis tareas &gt;</string>
 
@@ -15,4 +15,5 @@
     <string name="filtro_terminadas">Terminadas</string>
     <string name="sin_tareas">No hay tareas en esta sección</string>
     <string name="entrega_formato">Entrega: %1$s</string>
+    <string name="subtitulo_abajo">Tu día, bajo control</string>
 </resources>
