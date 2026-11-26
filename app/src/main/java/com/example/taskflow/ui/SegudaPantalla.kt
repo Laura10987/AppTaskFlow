@@ -304,7 +304,7 @@ fun SegudaPantalla(
                             fecha = fechaTexto
                         )
                         viewModel.agregarProducto(nombreLimpio, notasLimpias)
-                        onTareaGuardada()
+                        onTareaGuardada()//6 hacia arriba
                     }
                 },
                 enabled = nombreTarea.isNotBlank(),

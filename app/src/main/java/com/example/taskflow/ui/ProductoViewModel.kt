@@ -11,17 +11,17 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-@HiltViewModel
-class ProductoViewModel @Inject constructor(
+@HiltViewModel//8
+class ProductoViewModel @Inject constructor(//8
     private val repository: ProductoRepository
-) : ViewModel() {
+) : ViewModel() {//8
 
     val producto: StateFlow<List<Producto>> = repository.obtenerProductos()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = emptyList()
-        )
+        )//6
 
     fun agregarProducto(nombre: String, desc: String) {
         val trimNombre: String = nombre.trim()

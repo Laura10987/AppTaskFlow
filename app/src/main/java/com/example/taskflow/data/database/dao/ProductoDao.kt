@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface ProductoDao {
     @Insert
-    suspend fun insertarProducto(producto: ProductoEntity)
+    suspend fun insertarProducto(producto: ProductoEntity)//8
 
     @Update
     suspend fun actualizarProducto(producto: ProductoEntity)
@@ -21,6 +21,8 @@ interface ProductoDao {
 
     @Query("SELECT * FROM product WHERE id = :id")
     fun getItem(id: Int): Flow<ProductoEntity?>
+    //7
+
 
     @Query("SELECT * FROM product ORDER BY nombre DESC")
     fun obtenerProductos(): Flow<List<ProductoEntity>>

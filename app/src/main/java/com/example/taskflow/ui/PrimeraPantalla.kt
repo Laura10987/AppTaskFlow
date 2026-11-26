@@ -46,7 +46,7 @@ fun PrimeraPantalla(
     onTareaClick: (Tarea) -> Unit = {}
 ) {
     // 1. Leemos los datos reales desde Room en tiempo real
-    val productosDb by viewModel.producto.collectAsStateWithLifecycle()
+    val productosDb by viewModel.producto.collectAsStateWithLifecycle()//6
 
     // 2. Estados de completadas, eliminadas, detalle y configuración
     var idsCompletadas by remember { mutableStateOf(setOf<Int>()) }

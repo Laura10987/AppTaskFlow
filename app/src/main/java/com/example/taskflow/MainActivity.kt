@@ -15,19 +15,19 @@ import com.example.taskflow.ui.SegudaPantalla
 import com.example.taskflow.ui.theme.TaskFlowTheme
 import dagger.hilt.android.AndroidEntryPoint
 
-@AndroidEntryPoint
+@AndroidEntryPoint//8
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            TaskFlowTheme(darkTheme = EstadoTareasUi.modoOscuro) {
+            TaskFlowTheme(darkTheme = EstadoTareasUi.modoOscuro) {//3
                 NavegacionApp()
             }
         }
     }
 }
-
+// se declaran e implementan las librerías
 @Composable
 fun NavegacionApp() {
     val navController = rememberNavController()

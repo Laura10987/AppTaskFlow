@@ -5,7 +5,7 @@ import androidx.room.RoomDatabase
 import com.example.taskflow.data.database.dao.ProductoDao
 import com.example.taskflow.data.database.entity.ProductoEntity
 
-@Database(
+@Database(//12
     entities = [ProductoEntity::class],
     version = 1,
     exportSchema = false

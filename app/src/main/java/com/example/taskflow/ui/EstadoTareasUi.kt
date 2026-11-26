@@ -10,9 +10,9 @@ data class MetadatosTarea(
     val fecha: String = "Hoy"
 )
 
-object EstadoTareasUi {
+object EstadoTareasUi {//5
     val porNombre = mutableStateMapOf<String, MetadatosTarea>()
-    val porId = mutableStateMapOf<Int, MetadatosTarea>()
+    val porId = mutableStateMapOf<Int, MetadatosTarea>()//5
 
     var modoOscuro by mutableStateOf(false)
     var sonidoAlAvisar by mutableStateOf(true)

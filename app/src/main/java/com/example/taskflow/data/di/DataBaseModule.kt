@@ -10,12 +10,12 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
-@Module
+@Module//8
 @InstallIn(SingletonComponent::class)
 object DataBaseModule {
 
     @Singleton
-    @Provides
+    @Provides//8
     fun getInstance(@ApplicationContext context: Context): AppDatabase {
         return synchronized(this) {
             Room.databaseBuilder(
